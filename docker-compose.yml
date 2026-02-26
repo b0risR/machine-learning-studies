@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  mytensorflow:
+    build: .
+    image: mytensorflow:latest
+#    container_name:
+    # Docker Compose automatically creates a unique name.This is the "Industry Standard" way to do it
+    # very handy if you want to scale your service (e.g., docker compose up --scale tensorflow_service=3)
+    ports:
+      - "8888:8888"
+    volumes:
+      # Maps your local folder to the '/tf' folder in the container
+      - ~/ueaMasterBD/Tensorflow:/tf
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+#      - TF_ENABLE_ONEDNN_OPTS=0
+#      # Optional: Deep Neural Network Library is an optimization by Intel to make TensorFlow run faster on CPUs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # Restarts the container if it crashes, unless you manually stop it
+    restart: unless-stopped
+#  # Optional: Add a TensorBoard container to visualize training logs
+#  tensorboard:
+#    image: mytensorflow:latest
+#    container_name: tensorboard_service
+#    ports:
+#      - "6006:6006"
+#    volumes:
+#      - ~/ueaMasterBD/Tensorflow:/tf
+#    # Start TensorBoard pointing to a 'logs' subfolder
+#    command: >
+#      tensorboard --logdir=/tf/logs --host=0.0.0.0 --port=6006
+#  # Open http://localhost:6006 for your TensorBoard.
+#    restart: unless-stopped

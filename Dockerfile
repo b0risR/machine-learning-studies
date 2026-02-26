@@ -1,5 +1,9 @@
+# syntax=docker/dockerfile:1
 # Use NVIDIA CUDA base
 FROM nvidia/cuda:12.3.1-runtime-ubuntu22.04
+
+# Avoid interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
 
 USER root
 
@@ -11,16 +15,19 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-dev \
     git \
+    ffmpeg \
     build-essential \
     graphviz \
+    libgraphviz-dev \
+    pkg-config \
     swig \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --upgrade pip
 
-# Install TF with CUDA support and Jupyter without keeping the installer files
-RUN pip3 install --no-cache-dir "tensorflow[and-cuda]" jupyterlab ipywidgets joblib matplotlib nbdime nltk pandas \
-pydot scikit-learn scipy statsmodels keras-tuner tensorboard-plugin-profile tensorflow-datasets tensorflow-hub tensorflow-serving-api transformers \
-urlextract "gymnasium[classic_control,atari,accept-rom-license]" google-cloud-aiplatform google-cloud-storage xgboost box2d-py
+# Using a bind mount to install requirements from requirements.txt
+# Install libraries without keeping the installer files
+RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
+    pip3 install --no-cache-dir -r requirements.txt
 
 # Link NVIDIA libraries using standard cd instead of bash-specific pushd from https://www.tensorflow.org/install/pip
 # FROM https://www.tensorflow.org/install/pip ---> Corrected ptxas link for global installation (no venv)
